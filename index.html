@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Выбор товаров для накладной</title>
+    <script src="https://telegram.org"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            margin: 0; padding: 16px;
+        }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 14px; }
+        select, input {
+            width: 100%; padding: 12px; box-sizing: border-box;
+            border: 1px solid #ccc; border-radius: 8px;
+            background: var(--tg-theme-secondary-bg-color, #f1f1f1);
+            color: var(--tg-theme-text-color, #000000);
+            font-size: 16px; outline: none;
+        }
+        select:focus, input:focus { border-color: #248bcf; }
+        .calc-preview {
+            background: rgba(36, 139, 207, 0.1); padding: 12px;
+            border-radius: 8px; margin-top: 10px; font-weight: bold;
+            text-align: center; color: #248bcf;
+        }
+        .btn-send {
+            background-color: #248bcf; color: white; border: none;
+            padding: 14px; width: 100%; border-radius: 8px;
+            font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h3>🍏 Выберите товар из списка</h3>
+
+    <div class="form-group">
+        <label for="productSelect">Наименование продукта:</label>
+        <select id="productSelect">
+            <option value="Картошка">🥔 Картошка</option>
+            <option value="Лук">🧅 Лук</option>
+            <option value="Морковь">🥕 Морковь</option>
+            <option value="Чеснок">🧄 Чеснок</option>
+            <option value="Яблоки">🍎 Яблоки</option>
+            <option value="Помидоры">🍅 Помидоры</option>
+            <option value="Огурцы">🥒 Огурцы</option>
+            <option value="Капуста">🥬 Капуста</option>
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label for="unitSelect">Единица измерения:</label>
+        <select id="unitSelect">
+            <option value="кг">кг</option>
+            <option value="шт">шт</option>
+            <option value="л">л</option>
+            <option value="банка">банка</option>
+            <option value="коробка">коробка</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="quantity">Количество:</label>
+        <input type="number" id="quantity" step="0.01" value="1">
+    </div>
+
+    <div class="form-group">
+        <label for="price">Цена за единицу (сум):</label>
+        <input type="number" id="price" step="100" value="5000">
+    </div>
+
+    <div class="calc-preview" id="calcPreview">
+        Автосумма строки: 5 000.00 сум
+    </div>
+
+    <button class="btn-send" id="sendBtn">📥 Добавить в накладную</button>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        const qtyInput = document.getElementById('quantity');
+        const priceInput = document.getElementById('price');
+        const calcPreview = document.getElementById('calcPreview');
+
+        function updatePreview() {
+            const qty = parseFloat(qtyInput.value) || 0;
+            const price = parseFloat(priceInput.value) || 0;
+            const total = qty * price;
+            calcPreview.innerText = `Автосумма строки: ${total.toLocaleString('ru-RU', {minimumFractionDigits: 2})} сум`;
+        }
+
+        qtyInput.addEventListener('input', updatePreview);
+        priceInput.addEventListener('input', updatePreview);
+
+        document.getElementById('sendBtn').addEventListener('click', () => {
+            const product = document.getElementById('productSelect').value;
+            const unit = document.getElementById('unitSelect').value;
+            const qty = parseFloat(qtyInput.value);
+            const price = parseFloat(priceInput.value);
+
+            if (!qty || qty <= 0 || !price || price <= 0) {
+                alert("Пожалуйста, введите корректное количество и цену!");
+                return;
+            }
+
+            const resultData = {
+                product: product,
+                unit: unit,
+                qty: qty,
+                price: price
+            };
+
+            tg.sendData(JSON.stringify(resultData));
+            tg.close();
+        });
+    </script>
+</body>
+</html>
